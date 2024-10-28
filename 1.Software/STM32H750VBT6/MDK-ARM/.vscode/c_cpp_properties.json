@@ -10,6 +10,7 @@
                 "d:\\Code\\git\\Const_IMU\\1.Software\\STM32H750VBT6\\Drivers\\CMSIS\\Include",
                 "d:\\Code\\git\\Const_IMU\\1.Software\\STM32H750VBT6\\Hardware\\icm42688",
                 "d:\\Code\\git\\Const_IMU\\1.Software\\STM32H750VBT6\\Hardware\\serial",
+                "d:\\Code\\git\\Const_IMU\\1.Software\\STM32H750VBT6\\Hardware\\kalman",
                 "E:\\Hardware\\MDK\\Core\\ARM\\ARMCC\\include",
                 "E:\\Hardware\\MDK\\Core\\ARM\\ARMCC\\include\\arm_linux",
                 "E:\\Hardware\\MDK\\Core\\ARM\\ARMCC\\include\\arm_linux_compat",

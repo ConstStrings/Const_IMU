@@ -94,14 +94,12 @@ void icm42688_Init()
     reg_val |= (1 << 2); //FIFO_THS_INT1_ENABLE
     icm42688_writeReg(ICM42688_INT_SOURCE0, reg_val);
 
-    //bsp_Icm42688GetAres(AFS_8G);						//计算加速度计分辨率
     icm42688_writeReg(ICM42688_REG_BANK_SEL, 0x00);
     reg_val = icm42688_readReg(ICM42688_ACCEL_CONFIG0);
-    reg_val |= (AFS_2G << 5);   						//量程 ±2g
+    reg_val |= (AFS_4G << 5);   						//量程 ±2g
     reg_val |= (AODR_1000Hz);     						//输出速率 1000HZ
     icm42688_writeReg(ICM42688_ACCEL_CONFIG0, reg_val);
 
-    //bsp_Icm42688GetGres(GFS_1000DPS);					//计算陀螺仪分辨率
     icm42688_writeReg(ICM42688_REG_BANK_SEL, 0x00);
     reg_val = icm42688_readReg(ICM42688_GYRO_CONFIG0);
     reg_val |= (GFS_1000DPS << 5);   					//量程 ±1000dps
@@ -119,36 +117,16 @@ void icm42688_Init()
 
 icm42688_data icm42688_getAccel()
 {
-    icm42688_data acc;
-    uint8_t data[6];
-    //icm42688_readMem(ICM42688_ACCEL_DATA_X1, data, 6);
-
-    data[0] = icm42688_readReg(ICM42688_ACCEL_DATA_X0);
-    data[1] = icm42688_readReg(ICM42688_ACCEL_DATA_X1);   
-    data[2] = icm42688_readReg(ICM42688_ACCEL_DATA_Y0);
-    data[3] = icm42688_readReg(ICM42688_ACCEL_DATA_Y1);
-    data[4] = icm42688_readReg(ICM42688_ACCEL_DATA_Z0);
-    data[5] = icm42688_readReg(ICM42688_ACCEL_DATA_Z1);
-
-    memcpy(&acc, data, 6);
-
-    return acc;
+    icm42688_Raw_data acc_raw;
+    icm42688_readMem(ICM42688_ACCEL_DATA_X1, (uint8_t*)&acc_raw, 6);
+    return Merge_Raw_Data(acc_raw);
 }
 
 icm42688_data icm42688_getGYRO()
 {
-    icm42688_data gyro;
-    uint8_t data[2];
-    data[0] = icm42688_readReg(ICM42688_GYRO_DATA_X0);
-    data[1] = icm42688_readReg(ICM42688_GYRO_DATA_X1);
-    gyro.x = (data[1] << 8) | data[0];
-    data[0] = icm42688_readReg(ICM42688_GYRO_DATA_Y0);
-    data[1] = icm42688_readReg(ICM42688_GYRO_DATA_Y1);
-    gyro.y = (data[1] << 8) | data[0];
-    data[0] = icm42688_readReg(ICM42688_GYRO_DATA_Z0);
-    data[1] = icm42688_readReg(ICM42688_GYRO_DATA_Z1);
-    gyro.z = (data[1] << 8) | data[0];
-    return gyro;
+    icm42688_Raw_data gyro_raw;
+    icm42688_readMem(ICM42688_GYRO_DATA_X1, (uint8_t*)&gyro_raw, 6);
+    return Merge_Raw_Data(gyro_raw);
 }
 
 uint16_t icm42688_getFifoCnt()
@@ -186,9 +164,9 @@ void Read_FIFO_Raw_Data(FIFO_Raw_Data * FIFO_List, uint16_t len)
 icm42688_data Merge_Raw_Data(icm42688_Raw_data Raw_Data)
 {
     icm42688_data data;
-    data.x = ((uint16_t)Raw_Data.x_hi << 8) | Raw_Data.x_lo;
-    data.y = ((uint16_t)Raw_Data.y_hi << 8) | Raw_Data.y_lo;
-    data.z = ((uint16_t)Raw_Data.z_hi << 8) | Raw_Data.z_lo;
+    data.x = (int16_t)(((uint16_t)Raw_Data.x_hi << 8) | Raw_Data.x_lo);
+    data.y = (int16_t)(((uint16_t)Raw_Data.y_hi << 8) | Raw_Data.y_lo);
+    data.z = (int16_t)(((uint16_t)Raw_Data.z_hi << 8) | Raw_Data.z_lo);
     return data;
 }
 
@@ -200,6 +178,7 @@ FIFO_Data Process_FIFO_Raw_Data(FIFO_Raw_Data Raw_Data)
     Data.gyro_data = Merge_Raw_Data(Raw_Data.gyro_data);
     Data.temperature = Raw_Data.temperature;
     Data.TimeStamp = ((uint16_t)Raw_Data.TimeStamp.time_hi << 8) | Raw_Data.TimeStamp.time_lo;
+    Data.TimeStamp = Data.TimeStamp * 32 / 30;
     return Data;
 }
 
@@ -211,3 +190,62 @@ void Print_FIFO_Data(FIFO_Data data)
     myprintf("Temperature:%d\n",data.temperature);
     myprintf("TimeStamp:%d\n", data.TimeStamp);
 }
+
+Angle_Data Calculate_Angle_ByAcc(icm42688_data acc)  
+{
+    // 加速度计量程为 +-2g
+    double acc_x = (double)acc.x / 16384 * 9.81;
+    double acc_y = (double)acc.y / 16384 * 9.81;
+    double acc_z = (double)acc.z / 16384 * 9.81;
+
+
+    Angle_Data angle;
+    angle.Pitch = atan2(acc_x, sqrt(acc_y * acc_y + acc_z * acc_z)) * (180.0 / PI);
+    angle.Roll = atan2(acc_y, sqrt(acc_x * acc_x + acc_z * acc_z)) * (180.0 / PI);
+    angle.Yaw = 0;
+
+    return angle;
+}
+
+icm42688_data_float icm42688_getAcc_float()
+{
+    icm42688_data acc = icm42688_getAccel();
+
+    icm42688_data_float acc_flaot;
+
+    acc_flaot.x = (double)acc.x / 16384 * 9.81;
+    acc_flaot.y = (double)acc.y / 16384 * 9.81;
+    acc_flaot.z = (double)acc.z / 16384 * 9.81;
+
+    return acc_flaot;
+}
+
+icm42688_data_float icm42688_getGYRO_float()
+{
+    icm42688_data gyro = icm42688_getGYRO();
+
+    icm42688_data_float current_gyro;
+    current_gyro.x = (double)gyro.x / 32768 * 500;
+    current_gyro.y = (double)gyro.y / 32768 * 500;
+    current_gyro.z = (double)gyro.z / 32768 * 500;
+
+    return current_gyro;
+}
+
+Angle_Data Calculate_Angle_ByGyro(icm42688_data gyro, double delta_time)  
+{
+    static icm42688_data_float current_gyro;
+    current_gyro.x += (double)gyro.x / 32768 * 500 * delta_time;
+    current_gyro.y += (double)gyro.y / 32768 * 500 * delta_time;
+    current_gyro.z += (double)gyro.z / 32768 * 500 * delta_time;
+
+    Angle_Data angle;
+    angle.Pitch = current_gyro.x;
+    angle.Roll = current_gyro.y;
+    angle.Yaw = current_gyro.z;
+
+    return angle;
+}
+
+
+

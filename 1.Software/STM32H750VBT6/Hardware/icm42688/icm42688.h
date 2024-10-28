@@ -4,6 +4,7 @@
 #include "main.h"
 #include "string.h"
 #include "uart.h"
+#include "kalman.h"
 #include <math.h>
 
 #define PI 3.14159265358979323846
@@ -187,6 +188,13 @@ typedef struct icm42688_data
     int16_t z;
 } icm42688_data;
 
+typedef struct icm42688_data_float
+{
+    double x;
+    double y;
+    double z;
+} icm42688_data_float;
+
 typedef struct icm42688_Raw_data
 {
     uint8_t x_hi;
@@ -208,7 +216,7 @@ typedef struct FIFO_Raw_Data
     uint8_t header;
     icm42688_Raw_data acc_data;
     icm42688_Raw_data gyro_data;
-    uint8_t temperature;
+    int8_t temperature;
     Time_Raw_data TimeStamp;
 } FIFO_Raw_Data;
 
@@ -217,9 +225,16 @@ typedef struct FIFO_Data
     uint8_t header;
     icm42688_data acc_data;
     icm42688_data gyro_data;
-    uint8_t temperature;
+    int8_t temperature;
     uint16_t TimeStamp;
 }FIFO_Data;
+
+typedef struct Angle_Data
+{
+    double Pitch;
+    double Roll;
+    double Yaw;
+} Angle_Data;
 
 uint8_t icm42688_test(void);
 void icm42688_Init(void);
@@ -230,5 +245,10 @@ uint16_t icm42688_getFifoCnt(void);
 void Read_FIFO_Raw_Data(FIFO_Raw_Data *FIFO_List, uint16_t len);
 void Print_FIFO_Data(FIFO_Data data);
 FIFO_Data Process_FIFO_Raw_Data(FIFO_Raw_Data Raw_Data);
+icm42688_data Merge_Raw_Data(icm42688_Raw_data Raw_Data);
+Angle_Data Calculate_Angle_ByAcc(icm42688_data acc);
+Angle_Data Calculate_Angle_ByGyro(icm42688_data gyro, double delta_time);
+icm42688_data_float icm42688_getGYRO_float(void);
+icm42688_data_float icm42688_getAcc_float(void);
 
 #endif

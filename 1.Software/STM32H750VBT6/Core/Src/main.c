@@ -46,16 +46,30 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+Kalman_t KalmanX = {
+        .Q_angle = 0.001f,
+        .Q_bias = 0.003f,
+        .R_measure = 0.03f
+};
 
+Kalman_t KalmanY = {
+        .Q_angle = 0.001f,
+        .Q_bias = 0.003f,
+        .R_measure = 0.03f,
+};
+
+EKF_t Kalman_para = {
+    .Q_angle = 0.001f,
+    .Q_bias = 0.003f,
+    .R_measure = 0.03f};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 extern float current_yaw;
 /* USER CODE END PFP */
-FIFO_Raw_Data fifo_data[10];
+
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
@@ -70,9 +84,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-
-  /* MPU Configuration--------------------------------------------------------*/
-  MPU_Config();
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -95,21 +106,39 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  myprintf("Hello World:%d!\n",sizeof(FIFO_Raw_Data));
   icm42688_Init();
+  EKF_init(&Kalman_para);
+  myprintf("Hello World:%d!\n",sizeof(FIFO_Raw_Data));
+
+  // icm42688_data acc, gyro;
+  Angle_Data angle;
+  // icm42688_data_float angle;
+  uint32_t TimeStamp = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    myprintf("FIFO count:%d\n", icm42688_getFifoCnt());
+    // acc = icm42688_getAccel(); 
+    // gyro = icm42688_getGYRO();
+
+    double delta_time = (double)(HAL_GetTick() - TimeStamp) / 1000;
+    // angle = Calculate_Angle_ByGyro(gyro, delta_time);
+    // angle = Calculate_Angle_ByAcc(acc);
+    //angle.Pitch = Kalman_getAngle(&KalmanX, Calculate_Angle_ByAcc(acc).Roll, icm42688_getGYRO_float().x, delta_time);
+    angle = EKF_update(&Kalman_para, icm42688_getAcc_float(), icm42688_getGYRO_float(), delta_time);
+    TimeStamp = HAL_GetTick();
+    // myprintf("Anlge:%d,%d,%d\n", acc.x, acc.y, acc.z);
+    // angle = icm42688_getAcc_float();
+    // myprintf("Anlge:%f,%f,%f\n", angle.x, angle.y, angle.z);
+    myprintf("Anlge:%f,%f,%f\n", angle.Pitch, angle.Roll, angle.Yaw);
+
     /* USER CODE END WHILE */
-    Read_FIFO_Raw_Data(fifo_data, 10);
-    Print_FIFO_Data(Process_FIFO_Raw_Data(fifo_data[0]));
+
     /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_1);
-	  HAL_Delay(100);
+	  HAL_Delay(5);
   }
   /* USER CODE END 3 */
 }
@@ -181,35 +210,6 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/* MPU Configuration */
-
-void MPU_Config(void)
-{
-  MPU_Region_InitTypeDef MPU_InitStruct = {0};
-
-  /* Disables the MPU */
-  HAL_MPU_Disable();
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress = 0x0;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
-  MPU_InitStruct.SubRegionDisable = 0x87;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-  /* Enables the MPU */
-  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
-
-}
 
 /**
   * @brief  This function is executed in case of error occurrence.

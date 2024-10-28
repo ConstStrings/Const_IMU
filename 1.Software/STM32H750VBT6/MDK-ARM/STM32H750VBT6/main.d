@@ -39,8 +39,10 @@ stm32h750vbt6\main.o: ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.
 stm32h750vbt6\main.o: ../Core/Inc/spi.h
 stm32h750vbt6\main.o: ../Core/Inc/usart.h
 stm32h750vbt6\main.o: ../Core/Inc/gpio.h
-stm32h750vbt6\main.o: ..\Hardware\serial\uart.h
+stm32h750vbt6\main.o: ../Hardware/serial/uart.h
 stm32h750vbt6\main.o: E:\Hardware\MDK\Core\ARM\ARMCC\Bin\..\include\string.h
 stm32h750vbt6\main.o: E:\Hardware\MDK\Core\ARM\ARMCC\Bin\..\include\stdarg.h
 stm32h750vbt6\main.o: E:\Hardware\MDK\Core\ARM\ARMCC\Bin\..\include\stdio.h
+stm32h750vbt6\main.o: ../Hardware/icm42688/icm42688.h
+stm32h750vbt6\main.o: ..\Hardware\kalman\kalman.h
 stm32h750vbt6\main.o: ../Hardware/icm42688/icm42688.h

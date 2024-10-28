@@ -31,6 +31,7 @@
 "stm32h750vbt6\system_stm32h7xx.o"
 "stm32h750vbt6\icm42688.o"
 "stm32h750vbt6\uart.o"
+"stm32h750vbt6\kalman.o"
 --strict --scatter "STM32H750VBT6\STM32H750VBT6.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

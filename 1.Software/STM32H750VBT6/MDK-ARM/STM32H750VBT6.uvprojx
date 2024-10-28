@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32H750xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Hardware/icm42688;..\Hardware\serial</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../Hardware/icm42688;../Hardware/serial;..\Hardware\kalman</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -726,6 +726,16 @@
               <FileName>uart.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Hardware\serial\uart.h</FilePath>
+            </File>
+            <File>
+              <FileName>kalman.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\kalman\kalman.c</FilePath>
+            </File>
+            <File>
+              <FileName>kalman.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\kalman\kalman.h</FilePath>
             </File>
           </Files>
         </Group>
