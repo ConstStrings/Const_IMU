@@ -45,7 +45,7 @@ void EKF_init(EKF_t *ekf) {
             ekf->P[i][j] = (i == j) ? 1.0f : 0.0f;
 }
 
-Angle_Data EKF_update(EKF_t *ekf, icm42688_data_float acc, icm42688_data_float gyro, float dt) 
+Angle_Data EKF_update(EKF_t *ekf, icm42688_data_float acc, icm42688_data_float gyro, double dt) 
 {
     double accel_x = acc.x;
     double accel_y = acc.y;
@@ -53,12 +53,15 @@ Angle_Data EKF_update(EKF_t *ekf, icm42688_data_float acc, icm42688_data_float g
 
     double gyro_x = gyro.x;
     double gyro_y = gyro.y;
+    double gyro_z = gyro.z;
 
     float rate_pitch = gyro_y - ekf->bias_pitch;
     float rate_roll = gyro_x - ekf->bias_roll;
+    float rate_yaw = gyro_z - ekf->bias_yaw;
 
     ekf->pitch += dt * rate_pitch;
     ekf->roll += dt * rate_roll;
+    ekf->yaw += dt * rate_yaw;
 
 
     ekf->P[0][0] += dt * (dt * ekf->P[2][2] - ekf->P[0][2] - ekf->P[2][0] + ekf->Q_angle);
@@ -95,6 +98,7 @@ Angle_Data EKF_update(EKF_t *ekf, icm42688_data_float acc, icm42688_data_float g
     Angle_Data angle;
     angle.Pitch = ekf->pitch;
     angle.Roll = ekf->roll;
+    angle.Yaw = ekf->yaw;
 
     return angle;
 }

@@ -247,5 +247,64 @@ Angle_Data Calculate_Angle_ByGyro(icm42688_data gyro, double delta_time)
     return angle;
 }
 
+double Yaw_Bias_Test()
+{
+    Start_usTick();
+    uint32_t period_start = Get_usTick();
+    double yaw_sum = 0;
+    for (int i = 0; i < 1000; i++)
+    {
+        HAL_Delay(1);
+        icm42688_data_float gyro = icm42688_getGYRO_float();
+        yaw_sum += gyro.z * Get_usTick() / 1000000.0;
+        Reset_usTick();
+    }
+    uint32_t period_end = Get_usTick();
+    Stop_usTick();
+    Reset_usTick();
 
+    uint32_t period = period_end - period_start;
+
+    yaw_sum /= period / 1000000.0;
+
+    myprintf("Yaw Zero Rate Test: %f\n", yaw_sum);
+
+    return yaw_sum;
+}
+
+double Yaw_Bias_Calibration(EKF_t *ekf)
+{
+    double bias = 0;
+    for (int i = 0; i < 1000; i++)
+    {
+        icm42688_data_float gyro = icm42688_getGYRO_float();
+        bias += gyro.z;
+        HAL_Delay(1);
+    }
+    bias /= 1000.0f;
+
+    ekf->bias_yaw = bias;
+
+    return bias;
+}
+
+void Start_usTick()
+{
+    HAL_TIM_Base_Start(&htim2);
+}
+
+void Stop_usTick()
+{
+    HAL_TIM_Base_Stop(&htim2);
+}
+
+void Reset_usTick()
+{
+    __HAL_TIM_SET_COUNTER(&htim2, 0);
+}
+
+uint32_t Get_usTick()
+{
+    return __HAL_TIM_GET_COUNTER(&htim2);
+}
 

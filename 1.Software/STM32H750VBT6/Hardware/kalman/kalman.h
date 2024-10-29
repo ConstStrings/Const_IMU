@@ -14,7 +14,7 @@ typedef struct {
 } Kalman_t;
 
 
-typedef struct {
+typedef struct EKF_t{
     float Q_angle;   
     float Q_bias;   
     float R_measure; 
@@ -24,7 +24,10 @@ typedef struct {
     float bias_pitch;
     float bias_roll; 
 
-    float P[4][4];   
+    float P[4][4];
+
+    float bias_yaw;
+    float yaw;
 } EKF_t;
 
 typedef struct icm42688_data_float icm42688_data_float;
@@ -32,6 +35,6 @@ typedef struct Angle_Data Angle_Data;
 
 double Kalman_getAngle(Kalman_t *Kalman, double newAngle, double newRate, double dt);
 void EKF_init(EKF_t *ekf);
-Angle_Data EKF_update(EKF_t *ekf, icm42688_data_float acc, icm42688_data_float gyro, float dt);
+Angle_Data EKF_update(EKF_t *ekf, icm42688_data_float acc, icm42688_data_float gyro, double dt);
 
 #endif

@@ -2,6 +2,7 @@
 #define ICM42688_H_
 
 #include "main.h"
+#include "tim.h"
 #include "string.h"
 #include "uart.h"
 #include "kalman.h"
@@ -236,6 +237,8 @@ typedef struct Angle_Data
     double Yaw;
 } Angle_Data;
 
+typedef struct EKF_t EKF_t;
+
 uint8_t icm42688_test(void);
 void icm42688_Init(void);
 icm42688_data icm42688_getAccel(void);
@@ -250,5 +253,13 @@ Angle_Data Calculate_Angle_ByAcc(icm42688_data acc);
 Angle_Data Calculate_Angle_ByGyro(icm42688_data gyro, double delta_time);
 icm42688_data_float icm42688_getGYRO_float(void);
 icm42688_data_float icm42688_getAcc_float(void);
+
+double Yaw_Bias_Test(void);
+double Yaw_Bias_Calibration(EKF_t *ekf);
+
+void Start_usTick(void);
+void Stop_usTick(void);
+void Reset_usTick(void);
+uint32_t Get_usTick(void);
 
 #endif

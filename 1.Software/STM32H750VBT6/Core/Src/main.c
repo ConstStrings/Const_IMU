@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -26,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "uart.h"
 #include "icm42688.h"
+#include "kalman.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +63,8 @@ Kalman_t KalmanY = {
 EKF_t Kalman_para = {
     .Q_angle = 0.001f,
     .Q_bias = 0.003f,
-    .R_measure = 0.03f};
+    .R_measure = 0.03f
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,15 +108,19 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_SPI1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   icm42688_Init();
   EKF_init(&Kalman_para);
-  myprintf("Hello World:%d!\n",sizeof(FIFO_Raw_Data));
+  Yaw_Bias_Calibration(&Kalman_para);
+  myprintf("Yaw Bias:%f\n", Kalman_para.bias_yaw);
+
+  // myprintf("Hello World:%d!\n",sizeof(FIFO_Raw_Data));
 
   // icm42688_data acc, gyro;
   Angle_Data angle;
   // icm42688_data_float angle;
-  uint32_t TimeStamp = HAL_GetTick();
+  Start_usTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -123,12 +130,11 @@ int main(void)
     // acc = icm42688_getAccel(); 
     // gyro = icm42688_getGYRO();
 
-    double delta_time = (double)(HAL_GetTick() - TimeStamp) / 1000;
     // angle = Calculate_Angle_ByGyro(gyro, delta_time);
     // angle = Calculate_Angle_ByAcc(acc);
     //angle.Pitch = Kalman_getAngle(&KalmanX, Calculate_Angle_ByAcc(acc).Roll, icm42688_getGYRO_float().x, delta_time);
-    angle = EKF_update(&Kalman_para, icm42688_getAcc_float(), icm42688_getGYRO_float(), delta_time);
-    TimeStamp = HAL_GetTick();
+    angle = EKF_update(&Kalman_para, icm42688_getAcc_float(), icm42688_getGYRO_float(), Get_usTick() / 1000000.0l);
+    Reset_usTick();
     // myprintf("Anlge:%d,%d,%d\n", acc.x, acc.y, acc.z);
     // angle = icm42688_getAcc_float();
     // myprintf("Anlge:%f,%f,%f\n", angle.x, angle.y, angle.z);
