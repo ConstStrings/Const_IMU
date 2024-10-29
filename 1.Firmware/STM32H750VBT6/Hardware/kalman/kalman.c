@@ -40,6 +40,9 @@ void EKF_init(EKF_t *ekf) {
     ekf->bias_pitch = 0.0f;
     ekf->bias_roll = 0.0f;
 
+    ekf->bias_yaw = 0.0f;
+    ekf->yaw = 0.0f;
+
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
             ekf->P[i][j] = (i == j) ? 1.0f : 0.0f;
